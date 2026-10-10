@@ -1,4 +1,4 @@
-const { db } = require('./DB');
+const { db } = require('./src/db');
 const { sendEmail } = require('./sendEmail');
 const { validateEmail } = require('./utils');
 
