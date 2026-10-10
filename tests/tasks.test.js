@@ -48,6 +48,15 @@ describe('GET /tasks', () => {
     expect(res.body[0].title).toBe('Done Task');
   });
 
+  test('returns one page of tasks at a time, newest first', async () => {
+    for (let i = 1; i <= 5; i++) {
+      db.prepare('INSERT INTO tasks (title, created_at) VALUES (?, ?)').run(`Task ${i}`, `2024-01-0${i}`);
+    }
+    const res = await request(app).get('/tasks?page=2&page_size=2');
+    expect(res.status).toBe(200);
+    expect(res.body.map((t) => t.title)).toEqual(['Task 3', 'Task 2']);
+  });
+
   test('returns 400 for invalid status value', async () => {
     const res = await request(app).get('/tasks?status=invalid');
     expect(res.status).toBe(400);
