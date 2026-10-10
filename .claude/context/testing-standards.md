@@ -6,22 +6,21 @@ How to write tests for the Taskr API.
 
 - Name each test file `<resource>.test.js`, all lowercase, using the plural resource name: `tests/tasks.test.js`, `tests/projects.test.js`, `tests/comments.test.js`.
 - Put one file per resource in `tests/`.
-- Don't follow the legacy names `userTest.js` or `test-projects.js`. They are a known problem and will be renamed.
 - Files named this way match the `tests/*.test.js` pattern in `package.json`'s `testMatch`, so Jest picks them up automatically. No config change is needed.
 
 ## Tools and database
 
 - Use **Jest** as the test runner and **supertest** to make HTTP requests against the exported Express `app`.
 - Don't call `app.listen`, and don't use a real port.
-- Tests run against an **in-memory SQLite database**. `DB.js` switches to `:memory:` when `NODE_ENV === 'test'`, so set `NODE_ENV` before requiring the app or the DB:
+- Tests run against an **in-memory SQLite database**. `src/db/index.js` switches to `:memory:` when `NODE_ENV === 'test'`, so set `NODE_ENV` before requiring the app or the DB. The schema comes from `src/db/schema.js`, the same `createSchema` the seed script uses:
 
 ```js
 process.env.NODE_ENV = 'test';
 
 const request = require('supertest');
-const app = require('../index'); // ../src/index after the refactor
-const { db } = require('../DB');
-const { createSchema } = require('./schema');
+const app = require('../src/index');
+const { db } = require('../src/db');
+const { createSchema } = require('../src/db/schema');
 
 beforeAll(() => {
   createSchema(db);
@@ -34,7 +33,7 @@ beforeEach(() => {
 ```
 
 - Every test must be independent. Reset the tables in `beforeEach`, and never rely on order or on data left behind by another test.
-- Create the data each test needs inside the test, or in that file's `beforeEach`. Don't use `db/seed.js` or the on-disk `taskr.db`.
+- Create the data each test needs inside the test, or in that file's `beforeEach`. Don't use `src/db/seed.js` or the on-disk `taskr.db`.
 - For routes protected by `authenticate`, send `.set('x-api-key', 'dev-key')`.
 
 ## Coverage per endpoint
