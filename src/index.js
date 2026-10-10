@@ -7,6 +7,7 @@ const { usersRouter } = require('./routes/users');
 const { tasksRouter } = require('./routes/tasks');
 const { projectsRouter } = require('./routes/projects');
 const { taskCommentsRouter } = require('./routes/comments');
+const { tagsRouter, taskTagsRouter } = require('./routes/tags');
 
 const app = express();
 
@@ -27,7 +28,9 @@ app.post('/webhooks/task-update', (req, res) => {
 app.use('/users', usersRouter);
 app.use('/projects', projectsRouter);
 app.use('/tasks/:id/comments', taskCommentsRouter);
+app.use('/tasks/:id/tags', taskTagsRouter);
 app.use('/tasks', tasksRouter);
+app.use('/tags', tagsRouter);
 app.use(router);
 app.use(errorHandler);
 
