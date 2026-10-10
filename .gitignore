@@ -4,3 +4,6 @@ node_modules/
 taskr.db
 taskr.db-wal
 taskr.db-shm
+
+# Local MCP config (contains personal credentials)
+.mcp.json
