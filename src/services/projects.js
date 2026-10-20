@@ -18,15 +18,35 @@ function getProjectStats(projectId) {
   return stats;
 }
 
+/**
+ * @description Lists all projects, newest first.
+ *
+ * @returns {Object[]} Project rows.
+ */
 function listProjects() {
   return projectQueries.findAllProjects();
 }
 
+/**
+ * @description Fetches a project with task counts by status attached as stats, throwing 404 if it does not exist.
+ *
+ * @param {number|string} id - ID of the project.
+ * @returns {Object} The project row plus stats: { total, active, completed, archived }.
+ */
 function getProjectById(id) {
   const project = getExistingProject(id);
   return { ...project, stats: getProjectStats(id) };
 }
 
+/**
+ * @description Validates and creates a project, throwing 400 if name is missing.
+ *
+ * @param {Object} data - Request body.
+ * @param {string} data.name - Project name.
+ * @param {string} [data.description] - Optional description.
+ * @param {number|string} [data.owner_id] - Optional owning user ID.
+ * @returns {Object} The created project row.
+ */
 function createProject({ name, description, owner_id }) {
   if (!isNonEmptyString(name)) throw httpError(400, 'name is required');
   const result = projectQueries.insertProject({
@@ -37,6 +57,13 @@ function createProject({ name, description, owner_id }) {
   return projectQueries.findProjectById(result.lastInsertRowid);
 }
 
+/**
+ * @description Updates the fields present in data and keeps the rest, throwing 404 if the project does not exist.
+ *
+ * @param {number|string} id - ID of the project.
+ * @param {Object} data - Request body with any of name, description and owner_id.
+ * @returns {Object} The updated project row.
+ */
 function updateProject(id, data) {
   const existing = getExistingProject(id);
   projectQueries.updateProject(id, {
@@ -47,6 +74,12 @@ function updateProject(id, data) {
   return projectQueries.findProjectById(id);
 }
 
+/**
+ * @description Deletes a project, throwing 404 if it does not exist.
+ *
+ * @param {number|string} id - ID of the project.
+ * @returns {{ deleted: true }}
+ */
 function deleteProject(id) {
   const result = projectQueries.deleteProject(id);
   if (result.changes === 0) throw httpError(404, 'Project not found');

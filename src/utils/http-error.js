@@ -1,6 +1,5 @@
 /**
- * Creates an Error carrying an HTTP status code. Services throw these; the
- * central error handler turns them into { error } responses.
+ * @description Creates an Error carrying an HTTP status code for the central error handler to turn into an { error } response.
  *
  * @param {number} status - HTTP status code to respond with (e.g. 400, 404).
  * @param {string} message - Error message sent to the client as `error`.

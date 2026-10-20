@@ -14,6 +14,17 @@ function assertValidStatus(status) {
   }
 }
 
+/**
+ * @description Lists a page of tasks filtered by status, project and assignee, throwing 400 for an invalid status.
+ *
+ * @param {Object} query - Request query string.
+ * @param {string} [query.status] - Only tasks with this status.
+ * @param {string} [query.project_id] - Only tasks in this project.
+ * @param {string} [query.assignee_id] - Only tasks assigned to this user.
+ * @param {string} [query.page] - 1-based page number.
+ * @param {string} [query.page_size] - Rows per page.
+ * @returns {Object[]} Task rows.
+ */
 function listTasks({ status, project_id, assignee_id, page, page_size }) {
   assertValidStatus(status);
   const { limit, offset } = paginate(page, page_size);
@@ -26,13 +37,24 @@ function listTasks({ status, project_id, assignee_id, page, page_size }) {
   });
 }
 
-// Throws 404 if the task doesn't exist. Shared with the comments and tags services.
+/**
+ * @description Fetches a task or throws 404, and is shared with the comments and tags services for their existence checks.
+ *
+ * @param {number|string} id - ID of the task.
+ * @returns {Object} The task row.
+ */
 function getExistingTask(id) {
   const task = taskQueries.findTaskById(id);
   if (!task) throw httpError(404, 'Task not found');
   return task;
 }
 
+/**
+ * @description Fetches a task with its tags and comments attached, throwing 404 if it does not exist.
+ *
+ * @param {number|string} id - ID of the task.
+ * @returns {Object} The task row plus tags and comments arrays.
+ */
 function getTaskById(id) {
   const task = getExistingTask(id);
   task.tags = tagQueries.findTagsByTaskId(id);
@@ -40,6 +62,17 @@ function getTaskById(id) {
   return task;
 }
 
+/**
+ * @description Validates and creates a task, throwing 400 for a missing title or an unknown project or assignee.
+ *
+ * @param {Object} data - Request body.
+ * @param {string} data.title - Task title.
+ * @param {string} [data.description] - Optional description.
+ * @param {number|string} [data.project_id] - Optional project ID.
+ * @param {number|string} [data.assignee_id] - Optional assignee user ID.
+ * @param {string} [data.due_date] - Optional due date.
+ * @returns {Object} The created task row.
+ */
 function createTask({ title, description, project_id, assignee_id, due_date }) {
   if (!isNonEmptyString(title)) throw httpError(400, 'title is required');
   if (project_id && !projectQueries.findProjectById(parseInt(project_id))) {
@@ -66,6 +99,13 @@ function resolveCompletedAt(existing, newStatus) {
   return existing.completed_at;
 }
 
+/**
+ * @description Updates the fields present in data, keeps the rest and resolves completed_at from the status change, throwing 404 or 400 as needed.
+ *
+ * @param {number|string} id - ID of the task.
+ * @param {Object} data - Request body with any of title, description, status, project_id, assignee_id and due_date.
+ * @returns {Object} The updated task row.
+ */
 function updateTask(id, data) {
   const existing = getExistingTask(id);
   assertValidStatus(data.status);
@@ -85,6 +125,12 @@ function updateTask(id, data) {
   return taskQueries.findTaskById(id);
 }
 
+/**
+ * @description Deletes a task, throwing 404 if it does not exist.
+ *
+ * @param {number|string} id - ID of the task.
+ * @returns {{ deleted: true }}
+ */
 function deleteTask(id) {
   const result = taskQueries.deleteTask(id);
   if (result.changes === 0) throw httpError(404, 'Task not found');
